@@ -23,7 +23,27 @@ class Settings(BaseSettings):
     top_k: int = Field(default=40, ge=1)
     max_output_tokens: int = Field(default=2048, ge=1)
 
+    # --- Quality Judge Agent Settings ---
+    quality_judge_enabled: bool = Field(default=True)
+    quality_min_accuracy: float = Field(default=0.8, ge=0, le=1)
+    quality_min_completeness: float = Field(default=0.7, ge=0, le=1)
+    quality_min_clarity: float = Field(default=0.7, ge=0, le=1)
+    quality_min_scholarly_rigor: float = Field(default=0.7, ge=0, le=1)
+    quality_min_appropriateness: float = Field(default=0.8, ge=0, le=1)
+    quality_min_balance: float = Field(default=0.7, ge=0, le=1)
+    quality_min_citation_quality: float = Field(default=0.7, ge=0, le=1)
+    quality_min_coverage: float = Field(default=0.8, ge=0, le=1)
+    quality_regeneration_threshold: float = Field(default=0.7, ge=0, le=1)
+    quality_regeneration_max_attempts: int = Field(default=2, ge=1)
+
     gemini_timeout: int = Field(default=30, ge=1)
+
+    # Synthesis engine settings
+    synthesis_max_agents: int = Field(default=5, ge=2, le=10)
+    synthesis_contradiction_threshold: float = Field(default=0.9, ge=0, le=1)
+    synthesis_redundancy_reduction_target: float = Field(default=0.7, ge=0, le=1)
+    synthesis_attribution_required: bool = Field(default=True)
+    synthesis_quality_threshold: float = Field(default=0.8, ge=0, le=1)
 
     cors_origins: list[str] = Field(
         default_factory=lambda: [
@@ -36,9 +56,61 @@ class Settings(BaseSettings):
 
     port: int = Field(default=8000, ge=1)
 
+    # Memory and Context Sharing Infrastructure
+    memory_enabled: bool = Field(default=True, description="Enable persistent memory")
+    memory_vector_store_url: str = Field(
+        default="http://localhost:6333", description="Vector database URL for semantic memory"
+    )
+    memory_structured_store_url: str = Field(
+        default="redis://localhost:6379/0", description="Structured storage URL for factual knowledge"
+    )
+    memory_context_window_size: int = Field(
+        default=10, ge=1, description="Number of recent messages kept in short-term context"
+    )
+    memory_semantic_top_k: int = Field(default=5, ge=1, description="Number of semantic memory results to retrieve")
+    memory_sync_enabled: bool = Field(default=True, description="Enable inter-agent memory sync")
+    memory_versioning: bool = Field(default=True, description="Enable memory versioning")
+    memory_pruning_threshold: int = Field(default=10000, ge=1, description="Max memory entries before pruning")
+    memory_gc_interval_seconds: int = Field(default=3600, ge=60, description="Garbage collection interval in seconds")
+    memory_user_isolation: bool = Field(default=True, description="Isolate memory per user")
+
+    turkish_support_enabled: bool = Field(default=True)
+    turkish_terminology_db_path: str = Field(default="data/turkish_islamic_terms.json")
+    turkish_ottoman_recognition_enabled: bool = Field(default=True)
+    turkish_arabic_mapping_enabled: bool = Field(default=True)
+    turkish_transliteration_enabled: bool = Field(default=True)
+
+    # Respectful Disagreement Enforcement settings
+    enforce_respectful_disagreement: bool = True
+    disrespectful_language_patterns: list[str] = Field(
+        default_factory=lambda: [
+            "disparaging",
+            "dismissive",
+            "ignorant",
+            "invalid",
+            "absurd",
+            "ridiculous",
+        ]
+    )
+    adab_validation_enabled: bool = True
+    absolutism_detection_enabled: bool = True
+    polarization_detection_enabled: bool = True
+    respectful_alternative_suggestions_enabled: bool = True
+    acknowledgment_validation_enabled: bool = True
+    block_disrespectful_content: bool = True
+    min_adab_score: float = Field(default=0.8, ge=0, le=1)
+    max_disrespectful_confidence: float = Field(default=0.5, ge=0, le=1)
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value):
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
+
+    @field_validator("disrespectful_language_patterns", mode="before")
+    @classmethod
+    def parse_disrespectful_language_patterns(cls, value):
         if isinstance(value, str):
             return [item.strip() for item in value.split(",") if item.strip()]
         return value

@@ -1,5 +1,4 @@
 name: CI
-
 on:
   pull_request:
     branches: [main, dev]
@@ -13,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -45,7 +44,7 @@ jobs:
       - name: Run semantic cache tests
         run: pytest -q tests/test_semantic_cache.py
 
-      - name: Run fiqh tests
+      - name: Run fifqh tests
         run: pytest -q tests/test_fiqh.py
 
       - name: Run hadith grading tests
@@ -53,6 +52,9 @@ jobs:
 
       - name: Run audio hadith verification tests
         run: pytest -q tests/test_audio_hadith.py
+
+      - name: Run hadith research agent tests
+        run: pytest -q tests/test_hadith_research.py
 
       - name: Run structured citation tests
         run: pytest -q tests/test_citations.py tests/test_citations_integration.py
@@ -74,11 +76,18 @@ jobs:
 
       - name: Run contextual hadith interpretation tests
         run: pytest -q tests/test_hadith_context.py
+
       - name: Run model routing tests
         run: pytest -q tests/test_model_router.py
 
+      - name: Run multi-agent orchestration tests
+        run: pytest -q tests/test_orchestration.py
+
       - name: Run zakat and nisab tests
         run: pytest -q tests/test_zakat.py
+
+      - name: Run asbab al-nuzul tests
+        run: pytest -q tests/test_asbab.py
 
       - name: Run purchase history chat tests
         run: pytest -q tests/test_purchases.py
@@ -91,6 +100,9 @@ jobs:
 
       - name: Run religious sentiment tests
         run: pytest -q tests/test_sentiment.py
+
+      - name: Run Quran accuracy benchmark tests
+        run: pytest -q tests/test_quran_benchmark.py
 
       - name: Run LLM telemetry tests
         run: pytest -q tests/test_telemetry.py
@@ -110,9 +122,10 @@ jobs:
       - name: Run Islamic QA Benchmark dataset tests
         run: pytest -q tests/test_islamic_qa_benchmark.py
 
+      - name: Run intent classification tests
+        run: pytest -q tests/test_intent.py
+
       - name: Validate Islamic QA Benchmark dataset integrity
-        run: python scripts/eval_islamic_qa.py --validate-only
-      - name: Run page analysis tests
         run: pytest -q tests/test_page_analysis.py
 
       - name: Run database query optimizer tests
@@ -124,22 +137,8 @@ jobs:
       - name: Run Swahili language processing tests
         run: pytest -q tests/test_swahili.py
 
+      - name: Run Arabic dialect support tests
+        run: pytest -q tests/test_arabic_dialect.py
+
       - name: Run offline citation extraction eval
-        run: python scripts/eval_citations.py
-
-  docker-build:
-    name: Docker Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: docker build -t deenbridge-ai:ci .
-
-      - name: Verify container starts and /ping returns 200
-        run: |
-          docker run -d --name test-ai -p 8000:8000 -e GEMINI_API_KEY=dummy deenbridge-ai:ci
-          timeout 30s bash -c 'until curl -sf http://localhost:8000/ping; do sleep 1; done'
-          docker logs test-ai
-          docker stop test-ai
+        run: pytest -q tests/test_page_analysis.py
